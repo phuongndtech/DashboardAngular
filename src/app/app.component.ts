@@ -41,6 +41,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	topProductChartData: any[] = [];
 
+	compareRevenueChartData: any[] = [];
+
 	chartContainers = CHART_CONTAINER;
 
 	dataLoaded: boolean = false;
@@ -132,74 +134,54 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 			chart.render();
 		});
 
-		var chart = new CanvasJS.Chart("compareChartContainer", {
-			exportEnabled: true,
-			animationEnabled: true,
-			title: {
-				text: "Compare Restaurant Revenue By Years"
-			},
-			axisX: {
-				title: "Years"
-			},
-			legend: {
-				cursor: "pointer"
-			},
-			data: [{
-				type: "column",
-				name: "Restaurant 1",
-				showInLegend: true,
-				yValueFormatString: "#,##0.# USD",
-				dataPoints: [
-					{ label: "2019", y: 19034.5 },
-					{ label: "2018", y: 20015 },
-					{ label: "2017", y: 25342 },
-					{ label: "2016", y: 20088 },
-					{ label: "2015", y: 28234 }
-				]
-			},
-			{
-				type: "column",
-				name: "Restaurant 2",
-				showInLegend: true,
-				yValueFormatString: "#,##0.# USD",
-				dataPoints: [
-					{ label: "2019", y: 19034.5 },
-					{ label: "2018", y: 20015 },
-					{ label: "2017", y: 25342 },
-					{ label: "2016", y: 20088 },
-					{ label: "2015", y: 28234 }
-				]
-			}]
-		});
+		this.getRestaurantRevenue().subscribe(data => {
+			this.compareRevenueChartData = [];
 
-		chart.render();
+			for (let restType in data) {
+				if (data.hasOwnProperty(restType)) {
+					let restTypeData = data[restType];
+					let transformedData = restTypeData.map((item: any) => {
+						return { label: item.year, y: item.revenue };
+					});
+					this.compareRevenueChartData.push(transformedData);
+				}
+			}
+
+			let chart = new CanvasJS.Chart("compareChartContainer", {
+				exportEnabled: true,
+				animationEnabled: true,
+				title: {
+					text: "Compare Restaurant Revenue By Years"
+				},
+				axisX: {
+					title: "Years"
+				},
+				legend: {
+					cursor: "pointer"
+				},
+				data: [{
+					type: "column",
+					name: "Restaurant 1",
+					showInLegend: true,
+					yValueFormatString: "#,##0.# USD",
+					dataPoints: this.compareRevenueChartData[0]
+				},
+				{
+					type: "column",
+					name: "Restaurant 2",
+					showInLegend: true,
+					yValueFormatString: "#,##0.# USD",
+					dataPoints: this.compareRevenueChartData[1]
+				}]
+			});
+
+			chart.render();
+		})
 	}
-
 
 	ngAfterViewInit(): void {
 		this.productPricesData.paginator = this.paginator;
 		this.ordersData.paginator = this.paginator;
-	}
-
-	compareRevenuChartOptions = {
-		title: {
-			text: "Compare Revenue By Years"
-		},
-		animationEnabled: true,
-		data: [{
-			type: "column",
-			dataPoints: [
-				{ x: 10, y: 71 },
-				{ x: 20, y: 55 },
-				{ x: 30, y: 50 },
-				{ x: 40, y: 65 },
-				{ x: 50, y: 95 },
-				{ x: 60, y: 68 },
-				{ x: 70, y: 28 },
-				{ x: 80, y: 34 },
-				{ x: 90, y: 14 }
-			]
-		}]
 	}
 
 	ordersColumns: string[] = ['position', 'name', 'weight', 'symbol'];
@@ -230,6 +212,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	getTopProductRevenue(): Observable<any> {
 		return this.http.get<any>(`${BASE_ENDPOINT}/top-product`)
+	}
+
+	getRestaurantRevenue(): Observable<any> {
+		return this.http.get<any>(`${BASE_ENDPOINT}/restaurant-revenue`)
 	}
 
 	ngOnDestroy() {
