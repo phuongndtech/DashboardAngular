@@ -21,7 +21,7 @@
     <div id="layoutSidenav_content">
       <main>
         <div class="container-fluid px-4">
-          <h1 class="mt-4">Reporting</h1>
+          <h1 class="mt-4">Reporting For Year: <b>{{currentYear}}</b></h1>
           <ol class="breadcrumb mb-4">
             <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
             <li class="breadcrumb-item active">Reporting</li>
@@ -39,8 +39,7 @@
                   Top 5 Products by Revenue
                 </div>
                 <div class="card-body">
-                  <canvasjs-chart [options]="barChartTop5ProductsOptions"
-                    [styles]="{width: '100%', height:'200px'}"></canvasjs-chart>
+                  <div id="chartContainer" style="height: 370px; width: 100%;"></div>
                 </div>
               </div>
             </div>
@@ -51,8 +50,7 @@
                   Compare Revenue by Years
                 </div>
                 <div class="card-body">
-                  <canvasjs-chart [options]="compareRevenuChartOptions"
-                    [styles]="{width: '100%', height:'200px'}"></canvasjs-chart>
+                  <div id="compareChartContainer" style="height: 370px; width: 100%;"></div>
                 </div>
               </div>
             </div>

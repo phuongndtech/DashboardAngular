@@ -34,9 +34,23 @@ import { Observable } from 'rxjs';
 })
 
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+
+	currentYear: number;
+
+	chartData: any[] = [];
+
+	topProductChartData: any[] = [];
+
+	chartContainers = CHART_CONTAINER;
+
+	dataLoaded: boolean = false;
+
+	selected = 'option2';
+
 	displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
 
 	productPricesData = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
+
 	ordersData = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
 
 	@ViewChild(MatPaginator) paginator: MatPaginator;
@@ -49,26 +63,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	lastNameAutofilled: boolean;
 
-	chartData: any[] = [];
-
-	chartContainers = [
-		{ id: 'chartContainer1' },
-		{ id: 'chartContainer2' },
-		{ id: 'chartContainer3' },
-		{ id: 'chartContainer4' }
-	];
-
-	dataLoaded: boolean = false;
-
-	selected = 'option2';
-
-	getRevenueByPeriod(): Observable<any[]> {
-		return this.http.get<any>("https://localhost:7020/api/Dashboards/revenue-period");
-	}
-
 	constructor(private _autofill: AutofillMonitor, private http: HttpClient) { }
 
 	ngOnInit(): void {
+
+		this.getCurrentYear().subscribe(data => {
+			this.currentYear = data
+		})
 
 		this.getRevenueByPeriod().subscribe(data => {
 			this.chartData = [];
@@ -100,35 +101,84 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 				chart.render();
 			}
 		})
+
+		this.getTopProductRevenue().subscribe(data => {
+			this.topProductChartData = [];
+
+			let transformedData = data.productRevenues.map((item: any) => {
+				return { label: item.productName, y: Math.round(item.revenue / 1000) }
+			});
+
+			this.topProductChartData = transformedData;
+
+			let chart = new CanvasJS.Chart("chartContainer",
+				{
+					title: {
+						text: "Top 5 Products by Revenue (USD)"
+					},
+					animationEnabled: true,
+					axisY: {
+						includeZero: true,
+						suffix: "K"
+					},
+					data: [{
+						type: "bar",
+						indexLabel: "{y}",
+						yValueFormatString: "#,###K",
+						dataPoints: this.topProductChartData
+					}]
+				}
+			);
+			chart.render();
+		});
+
+		var chart = new CanvasJS.Chart("compareChartContainer", {
+			exportEnabled: true,
+			animationEnabled: true,
+			title: {
+				text: "Compare Restaurant Revenue By Years"
+			},
+			axisX: {
+				title: "Years"
+			},
+			legend: {
+				cursor: "pointer"
+			},
+			data: [{
+				type: "column",
+				name: "Restaurant 1",
+				showInLegend: true,
+				yValueFormatString: "#,##0.# USD",
+				dataPoints: [
+					{ label: "2019", y: 19034.5 },
+					{ label: "2018", y: 20015 },
+					{ label: "2017", y: 25342 },
+					{ label: "2016", y: 20088 },
+					{ label: "2015", y: 28234 }
+				]
+			},
+			{
+				type: "column",
+				name: "Restaurant 2",
+				showInLegend: true,
+				yValueFormatString: "#,##0.# USD",
+				dataPoints: [
+					{ label: "2019", y: 19034.5 },
+					{ label: "2018", y: 20015 },
+					{ label: "2017", y: 25342 },
+					{ label: "2016", y: 20088 },
+					{ label: "2015", y: 28234 }
+				]
+			}]
+		});
+
+		chart.render();
 	}
+
 
 	ngAfterViewInit(): void {
 		this.productPricesData.paginator = this.paginator;
 		this.ordersData.paginator = this.paginator;
-
-	}
-
-	barChartTop5ProductsOptions = {
-		title: {
-			text: "Top 5 Products by Revenue"
-		},
-		animationEnabled: true,
-		axisY: {
-			includeZero: true,
-			suffix: "K"
-		},
-		data: [{
-			type: "bar",
-			indexLabel: "{y}",
-			yValueFormatString: "#,###K",
-			dataPoints: [
-				{ label: "Snapchat", y: 15 },
-				{ label: "Instagram", y: 20 },
-				{ label: "YouTube", y: 24 },
-				{ label: "Twitter", y: 29 },
-				{ label: "Facebook", y: 73 }
-			]
-		}]
 	}
 
 	compareRevenuChartOptions = {
@@ -169,6 +219,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		{ value: 'saab', viewValue: 'Saab' },
 		{ value: 'mercedes', viewValue: 'Mercedes' },
 	];
+
+	getRevenueByPeriod(): Observable<any[]> {
+		return this.http.get<any>(`${BASE_ENDPOINT}/revenue-period`);
+	}
+
+	getCurrentYear(): Observable<number> {
+		return this.http.get<number>(`${BASE_ENDPOINT}/current-year`);
+	}
+
+	getTopProductRevenue(): Observable<any> {
+		return this.http.get<any>(`${BASE_ENDPOINT}/top-product`)
+	}
 
 	ngOnDestroy() {
 		this._autofill.stopMonitoring(this.firstName);
@@ -215,3 +277,12 @@ const ELEMENT_DATA: PeriodicElement[] = [
 	{ position: 19, name: 'Potassium', weight: 39.0983, symbol: 'K' },
 	{ position: 20, name: 'Calcium', weight: 40.078, symbol: 'Ca' },
 ];
+
+const BASE_ENDPOINT: string = "https://localhost:7020/api/Dashboards";
+
+const CHART_CONTAINER = [
+	{ id: 'chartContainer1' },
+	{ id: 'chartContainer2' },
+	{ id: 'chartContainer3' },
+	{ id: 'chartContainer4' }
+]
