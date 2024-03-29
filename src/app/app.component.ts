@@ -185,7 +185,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		this.dataSource.paginator = this.paginator;
 	}
 
-
 	search() {
 		const inputValue = (this.productName.nativeElement as HTMLInputElement).value;
 		this.getOrdersByRestaurant(this.selected, inputValue).subscribe(data => {
