@@ -1,3 +1,7 @@
 mat-form-field {
-    margin-right: 12px;
-  }
+  margin-right: 12px;
+}
+
+mat-form-field.product-name {
+  width: 30%;
+}

@@ -45,25 +45,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	chartContainers = CHART_CONTAINER;
 
-	dataLoaded: boolean = false;
+	ordersColumns: string[] = ORDER_COLUMN;
 
-	selected = 'option2';
-
-	displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
-
-	productPricesData = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
-
-	ordersData = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
+	dataSource = new MatTableDataSource<Order>([]);
 
 	@ViewChild(MatPaginator) paginator: MatPaginator;
+	
+	@ViewChild('productName', { read: ElementRef }) productName: ElementRef<HTMLElement>;
+	
+	productNameAutofilled: boolean;
 
-	@ViewChild('first', { read: ElementRef }) firstName: ElementRef<HTMLElement>;
-
-	@ViewChild('last', { read: ElementRef }) lastName: ElementRef<HTMLElement>;
-
-	firstNameAutofilled: boolean;
-
-	lastNameAutofilled: boolean;
+	dataLoaded: boolean = false;
+	
+	selected = 1;
 
 	constructor(private _autofill: AutofillMonitor, private http: HttpClient) { }
 
@@ -176,95 +170,74 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 			});
 
 			chart.render();
-		})
+		});
+		
+		this.loadData();
 	}
+
+	loadData() {
+		this.getOrdersByRestaurant(this.selected).subscribe(data => {
+		  this.dataSource.data = data.orders;
+		});
+	  }
 
 	ngAfterViewInit(): void {
-		this.productPricesData.paginator = this.paginator;
-		this.ordersData.paginator = this.paginator;
+		this.dataSource.paginator = this.paginator;
 	}
+	
 
-	ordersColumns: string[] = ['position', 'name', 'weight', 'symbol'];
-	productPricesColumns: string[] = ['position', 'name'];
+	search() {
+		const inputValue = (this.productName.nativeElement as HTMLInputElement).value;
+		this.getOrdersByRestaurant(this.selected, inputValue).subscribe(data => {
+			this.dataSource.data = data.orders;
+		  });
+	  }
 
-	selectedValue: string;
-	selectedCar: string;
-
-	foods: Food[] = [
-		{ value: 'steak-0', viewValue: 'Steak' },
-		{ value: 'pizza-1', viewValue: 'Pizza' },
-		{ value: 'tacos-2', viewValue: 'Tacos' },
-	];
-
-	cars: Car[] = [
-		{ value: 'volvo', viewValue: 'Volvo' },
-		{ value: 'saab', viewValue: 'Saab' },
-		{ value: 'mercedes', viewValue: 'Mercedes' },
+	restaurants: Restaurant[] = [
+		{ value: 1, name: 'Restaurant 1' },
+		{ value: 2, name: 'Restaurant 2' }
 	];
 
 	getRevenueByPeriod(): Observable<any[]> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/revenue-period`);
+		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/revenue-period`);
 	}
 
 	getCurrentYear(): Observable<number> {
-		return this.http.get<number>(`${BASE_ENDPOINT}/current-year`);
+		return this.http.get<number>(`${BASE_ENDPOINT}/dashboards/current-year`);
 	}
 
 	getTopProductRevenue(): Observable<any> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/top-product`)
+		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/top-product`)
 	}
 
 	getRestaurantRevenue(): Observable<any> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/restaurant-revenue`)
+		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/restaurant-revenue`)
+	}
+
+	getOrdersByRestaurant(type: number, searchText?: string): Observable<any>{
+		return this.http.get<any>(`${BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`)
 	}
 
 	ngOnDestroy() {
-		this._autofill.stopMonitoring(this.firstName);
-		this._autofill.stopMonitoring(this.lastName);
+		this._autofill.stopMonitoring(this.productName);
 	}
 }
 
-export interface PeriodicElement {
+export interface Order {
+	OrderNumber: number;
+	OrderDate: Date;
+	ItemName: string;
+	Quantity: number;
+	ProductPrice: number;
+	TotalProducts: number;
+}
+
+export interface Restaurant {
+	value: number;
 	name: string;
-	position: number;
-	weight: number;
-	symbol: string;
 }
 
-export interface Food {
-	value: string;
-	viewValue: string;
-}
-
-export interface Car {
-	value: string;
-	viewValue: string;
-}
-
-const ELEMENT_DATA: PeriodicElement[] = [
-	{ position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
-	{ position: 2, name: 'Helium', weight: 4.0026, symbol: 'He' },
-	{ position: 3, name: 'Lithium', weight: 6.941, symbol: 'Li' },
-	{ position: 4, name: 'Beryllium', weight: 9.0122, symbol: 'Be' },
-	{ position: 5, name: 'Boron', weight: 10.811, symbol: 'B' },
-	{ position: 6, name: 'Carbon', weight: 12.0107, symbol: 'C' },
-	{ position: 7, name: 'Nitrogen', weight: 14.0067, symbol: 'N' },
-	{ position: 8, name: 'Oxygen', weight: 15.9994, symbol: 'O' },
-	{ position: 9, name: 'Fluorine', weight: 18.9984, symbol: 'F' },
-	{ position: 10, name: 'Neon', weight: 20.1797, symbol: 'Ne' },
-	{ position: 11, name: 'Sodium', weight: 22.9897, symbol: 'Na' },
-	{ position: 12, name: 'Magnesium', weight: 24.305, symbol: 'Mg' },
-	{ position: 13, name: 'Aluminum', weight: 26.9815, symbol: 'Al' },
-	{ position: 14, name: 'Silicon', weight: 28.0855, symbol: 'Si' },
-	{ position: 15, name: 'Phosphorus', weight: 30.9738, symbol: 'P' },
-	{ position: 16, name: 'Sulfur', weight: 32.065, symbol: 'S' },
-	{ position: 17, name: 'Chlorine', weight: 35.453, symbol: 'Cl' },
-	{ position: 18, name: 'Argon', weight: 39.948, symbol: 'Ar' },
-	{ position: 19, name: 'Potassium', weight: 39.0983, symbol: 'K' },
-	{ position: 20, name: 'Calcium', weight: 40.078, symbol: 'Ca' },
-];
-
-const BASE_ENDPOINT: string = "https://localhost:7020/api/Dashboards";
+const BASE_ENDPOINT: string = "https://localhost:7020/api";
 
 const CHART_CONTAINER = [
 	{ id: 'chartContainer1' },
@@ -272,3 +245,5 @@ const CHART_CONTAINER = [
 	{ id: 'chartContainer3' },
 	{ id: 'chartContainer4' }
 ]
+
+const ORDER_COLUMN = ['Order Number', 'Order Date', 'Item Name', 'Quantity', 'Product Price', 'Total products'];
