@@ -50,13 +50,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	dataSource = new MatTableDataSource<Order>([]);
 
 	@ViewChild(MatPaginator) paginator: MatPaginator;
-	
+
 	@ViewChild('productName', { read: ElementRef }) productName: ElementRef<HTMLElement>;
-	
+
 	productNameAutofilled: boolean;
 
 	dataLoaded: boolean = false;
-	
+
 	selected = 1;
 
 	constructor(private _autofill: AutofillMonitor, private http: HttpClient) { }
@@ -171,27 +171,27 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 			chart.render();
 		});
-		
+
 		this.loadData();
 	}
 
 	loadData() {
 		this.getOrdersByRestaurant(this.selected).subscribe(data => {
-		  this.dataSource.data = data;
+			this.dataSource.data = data;
 		});
-	  }
+	}
 
 	ngAfterViewInit(): void {
 		this.dataSource.paginator = this.paginator;
 	}
-	
+
 
 	search() {
 		const inputValue = (this.productName.nativeElement as HTMLInputElement).value;
 		this.getOrdersByRestaurant(this.selected, inputValue).subscribe(data => {
 			this.dataSource.data = data;
-		  });
-	  }
+		});
+	}
 
 	restaurants: Restaurant[] = [
 		{ value: 1, name: 'Restaurant 1' },
@@ -214,7 +214,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/restaurant-revenue`)
 	}
 
-	getOrdersByRestaurant(type: number, searchText?: string): Observable<any>{
+	getOrdersByRestaurant(type: number, searchText?: string): Observable<any> {
 		return this.http.get<any>(`${BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`)
 	}
 
