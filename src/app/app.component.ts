@@ -177,7 +177,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	loadData() {
 		this.getOrdersByRestaurant(this.selected).subscribe(data => {
-		  this.dataSource.data = data.orders;
+		  this.dataSource.data = data;
 		});
 	  }
 
@@ -189,7 +189,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	search() {
 		const inputValue = (this.productName.nativeElement as HTMLInputElement).value;
 		this.getOrdersByRestaurant(this.selected, inputValue).subscribe(data => {
-			this.dataSource.data = data.orders;
+			this.dataSource.data = data;
 		  });
 	  }
 
