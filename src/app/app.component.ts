@@ -1,15 +1,17 @@
-import { AfterViewInit, Component, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, ViewChild, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
-import { CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
+import { CanvasJS, CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { AutofillMonitor } from '@angular/cdk/text-field';
-import {FormsModule} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Component({
 	selector: 'app-root',
@@ -24,13 +26,14 @@ import {FormsModule} from '@angular/forms';
 		MatFormFieldModule,
 		MatButtonModule,
 		MatInputModule,
-		FormsModule
+		FormsModule,
+		HttpClientModule
 	],
 	templateUrl: './app.component.html',
 	styleUrl: './app.component.css'
 })
 
-export class AppComponent implements AfterViewInit, OnDestroy {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	displayedColumns: string[] = ['position', 'name', 'weight', 'symbol'];
 
 	productPricesData = new MatTableDataSource<PeriodicElement>(ELEMENT_DATA);
@@ -39,39 +42,70 @@ export class AppComponent implements AfterViewInit, OnDestroy {
 	@ViewChild(MatPaginator) paginator: MatPaginator;
 
 	@ViewChild('first', { read: ElementRef }) firstName: ElementRef<HTMLElement>;
+
 	@ViewChild('last', { read: ElementRef }) lastName: ElementRef<HTMLElement>;
+
 	firstNameAutofilled: boolean;
+
 	lastNameAutofilled: boolean;
 
-	constructor(private _autofill: AutofillMonitor) { }
+	chartData: any[] = [];
+
+	chartContainers = [
+		{ id: 'chartContainer1' },
+		{ id: 'chartContainer2' },
+		{ id: 'chartContainer3' },
+		{ id: 'chartContainer4' }
+	];
+
+	dataLoaded: boolean = false;
+
+	selected = 'option2';
+
+	getRevenueByPeriod(): Observable<any[]> {
+		return this.http.get<any>("https://localhost:7020/api/Dashboards/revenue-period");
+	}
+
+	constructor(private _autofill: AutofillMonitor, private http: HttpClient) { }
+
+	ngOnInit(): void {
+
+		this.getRevenueByPeriod().subscribe(data => {
+			this.chartData = [];
+
+			for (let period in data) {
+				if (data.hasOwnProperty(period)) {
+					let periodData = data[period];
+					let transformedData = periodData.map((item: any) => {
+						return { y: item.percentage, name: item.restaurantName };
+					});
+					this.chartData.push(transformedData);
+				}
+			}
+
+			for (var i = 0; i < 4; i++) {
+				var chart = new CanvasJS.Chart("chartContainer" + (i + 1), {
+					animationEnabled: true,
+					title: {
+						text: "Revenue Period " + (i + 1)
+					},
+					data: [{
+						type: "pie",
+						indexLabel: "{name}: {y}",
+						yValueFormatString: "#,###.##'%'",
+						dataPoints: this.chartData[i]
+					}]
+				});
+
+				chart.render();
+			}
+		})
+	}
 
 	ngAfterViewInit(): void {
 		this.productPricesData.paginator = this.paginator;
 		this.ordersData.paginator = this.paginator;
-		this._autofill
-			.monitor(this.firstName)
-			.subscribe(e => (this.firstNameAutofilled = e.isAutofilled));
-		this._autofill
-			.monitor(this.lastName)
-			.subscribe(e => (this.lastNameAutofilled = e.isAutofilled));
-	}
 
-	selected = 'option2';
-
-	chartOptions = {
-		animationEnabled: true,
-		title: {
-			text: "Revenue Period 1"
-		},
-		data: [{
-			type: "pie",
-			indexLabel: "{name}: {y}",
-			yValueFormatString: "#,###.##'%'",
-			dataPoints: [
-				{ y: 20.1, name: "Restaurant 1" },
-				{ y: 28.2, name: "Restaurant 2" },
-			]
-		}]
 	}
 
 	barChartTop5ProductsOptions = {
@@ -158,6 +192,7 @@ export interface Car {
 	value: string;
 	viewValue: string;
 }
+
 const ELEMENT_DATA: PeriodicElement[] = [
 	{ position: 1, name: 'Hydrogen', weight: 1.0079, symbol: 'H' },
 	{ position: 2, name: 'Helium', weight: 4.0026, symbol: 'He' },

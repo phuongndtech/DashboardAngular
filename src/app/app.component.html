@@ -27,17 +27,8 @@
             <li class="breadcrumb-item active">Reporting</li>
           </ol>
           <div class="row">
-            <div class="col-xl-3 col-md-6">
-              <canvasjs-chart [options]="chartOptions" [styles]="{width: '100%', height:'200px'}"></canvasjs-chart>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <canvasjs-chart [options]="chartOptions" [styles]="{width: '100%', height:'200px'}"></canvasjs-chart>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <canvasjs-chart [options]="chartOptions" [styles]="{width: '100%', height:'200px'}"></canvasjs-chart>
-            </div>
-            <div class="col-xl-3 col-md-6">
-              <canvasjs-chart [options]="chartOptions" [styles]="{width: '100%', height:'200px'}"></canvasjs-chart>
+            <div class="col-xl-3 col-md-6" *ngFor="let container of chartContainers">
+              <div [id]="container.id" style="height: 370px; width: 100%;"></div>
             </div>
           </div>
           <div class="row">
