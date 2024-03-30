@@ -5,3 +5,18 @@ mat-form-field {
 mat-form-field.product-name {
   width: 30%;
 }
+
+.padding-30px {
+  padding: 30px;
+}
+
+.table-container {
+  position: relative;
+}
+
+.loading-overlay {
+  position: absolute;
+  left: 50%;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+}

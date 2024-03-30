@@ -1,5 +1,5 @@
 import { AfterViewInit, Component, ViewChild, ElementRef, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { CanvasJS, CanvasJSAngularChartsModule } from '@canvasjs/angular-charts';
@@ -12,6 +12,8 @@ import { AutofillMonitor } from '@angular/cdk/text-field';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
 	selector: 'app-root',
@@ -27,8 +29,10 @@ import { Observable } from 'rxjs';
 		MatButtonModule,
 		MatInputModule,
 		FormsModule,
-		HttpClientModule
+		HttpClientModule,
+		MatProgressSpinnerModule
 	],
+	providers: [DatePipe],
 	templateUrl: './app.component.html',
 	styleUrl: './app.component.css'
 })
@@ -55,11 +59,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	productNameAutofilled: boolean;
 
-	dataLoaded: boolean = false;
+	isLoadingOrder: boolean = true;
 
 	selected = 1;
 
-	constructor(private _autofill: AutofillMonitor, private http: HttpClient) { }
+	formattedDate: string | null;
+
+	constructor(private datePipe: DatePipe, private _autofill: AutofillMonitor, private http: HttpClient) { }
 
 	ngOnInit(): void {
 
@@ -176,9 +182,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	loadData() {
-		this.getOrdersByRestaurant(this.selected).subscribe(data => {
+		this.getOrdersByRestaurant(this.selected).pipe(
+			map(data => {
+				data.forEach((order: any) => {
+					order.orderDate = this.datePipe.transform(order.orderDate, 'dd-MM-yyyy HH:mm');
+				});
+				return data;
+			})
+		).subscribe(data => {
+			this.isLoadingOrder = false;
 			this.dataSource.data = data;
-		});
+		},
+			() => this.isLoadingOrder = false
+		);
 	}
 
 	ngAfterViewInit(): void {
@@ -186,10 +202,23 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	search() {
+		this.dataSource.data = [];
+		this.isLoadingOrder = true;
 		const inputValue = (this.productName.nativeElement as HTMLInputElement).value;
-		this.getOrdersByRestaurant(this.selected, inputValue).subscribe(data => {
-			this.dataSource.data = data;
-		});
+		this.getOrdersByRestaurant(this.selected, inputValue)
+			.pipe(
+				map(data => {
+					data.forEach((order: any) => {
+						order.orderDate = this.datePipe.transform(order.orderDate, 'dd-MM-yyyy HH:mm');
+					});
+					return data;
+				}))
+			.subscribe(data => {
+				this.isLoadingOrder = false;
+				this.dataSource.data = data;
+			},
+				() => this.isLoadingOrder = false
+			);
 	}
 
 	restaurants: Restaurant[] = [
@@ -197,8 +226,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		{ value: 2, name: 'Restaurant 2' }
 	];
 
-	getRevenueByPeriod(): Observable<any[]> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/revenue-period`);
+	getRevenueByPeriod(): Observable<any> {
+		return this.http.get(`${BASE_ENDPOINT}/dashboards/revenue-period`);
 	}
 
 	getCurrentYear(): Observable<number> {
@@ -206,15 +235,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	getTopProductRevenue(): Observable<any> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/top-product`)
+		return this.http.get(`${BASE_ENDPOINT}/dashboards/top-product`)
 	}
 
 	getRestaurantRevenue(): Observable<any> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/dashboards/restaurant-revenue`)
+		return this.http.get(`${BASE_ENDPOINT}/dashboards/restaurant-revenue`)
 	}
 
 	getOrdersByRestaurant(type: number, searchText?: string): Observable<any> {
-		return this.http.get<any>(`${BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`)
+		return this.http.get(`${BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`)
 	}
 
 	ngOnDestroy() {
