@@ -10,7 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { AutofillMonitor } from '@angular/cdk/text-field';
 import { FormsModule } from '@angular/forms';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClientModule } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
 import axios from 'axios';
 import { map } from 'rxjs/operators';
@@ -76,9 +76,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	isExporting: boolean = false;
 
-	constructor(private datePipe: DatePipe, 
-		private _autofill: AutofillMonitor, 
-		private http: HttpClient, 
+	constructor(private datePipe: DatePipe,
+		private _autofill: AutofillMonitor,
 		private _liveAnnouncer: LiveAnnouncer,
 		private _snackBar: MatSnackBar) { }
 
@@ -214,24 +213,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	export() {
 		this.isExporting = true;
-		this.exportOrders().subscribe(response => {
-			const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-			const url = window.URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = 'restaurant_data.xlsx';
-			document.body.appendChild(a);
-			a.click();
-			window.URL.revokeObjectURL(url);
-			document.body.removeChild(a);
+		this.exportOrders().subscribe(() => {
+			window.location.href = `${this.BASE_ENDPOINT}/orders/export`;
 			this.isExporting = false;
 			this.showNotification('Export Successful');
-		  },
-		  error => {
-			this.isExporting = false;
-			console.error('Export failed', error);
-			this.showNotification('Export Failed');
-		  }
+		},
+			error => {
+				this.isExporting = false;
+				console.error('Export failed', error);
+				this.showNotification('Export Failed');
+			}
 		);
 	}
 
@@ -242,7 +233,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 			verticalPosition: 'top'
 		});
 	}
-	
+
 	ngAfterViewInit(): void {
 		this.dataSource.paginator = this.paginator;
 		this.dataSource.sort = this.sort;
