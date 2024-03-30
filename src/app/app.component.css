@@ -12,6 +12,9 @@ mat-form-field.product-name {
 
 .table-container {
   position: relative;
+  max-height: 400px;
+  max-width: 100%;
+  overflow: auto;
 }
 
 .loading-overlay {
