@@ -11,7 +11,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { AutofillMonitor } from '@angular/cdk/text-field';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
+import axios from 'axios';
 import { map } from 'rxjs/operators';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
@@ -69,6 +70,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	selected = 1;
 
 	formattedDate: string | null;
+
+	BASE_ENDPOINT: string = "https://localhost:7020/api";
 
 	constructor(private datePipe: DatePipe, private _autofill: AutofillMonitor, private http: HttpClient, private _liveAnnouncer: LiveAnnouncer) { }
 
@@ -203,8 +206,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	export() {
-		this.exportOrders();
+		this.exportOrders().subscribe(
+			(response: any) => {
+
+			}
+		);
 	}
+
 
 	ngAfterViewInit(): void {
 		this.dataSource.paginator = this.paginator;
@@ -243,29 +251,47 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		{ value: 1, name: 'Restaurant 1' },
 		{ value: 2, name: 'Restaurant 2' }
 	];
-
+	
 	getRevenueByPeriod(): Observable<any> {
-		return this.http.get(`${BASE_ENDPOINT}/dashboards/revenue-period`);
+		return from(axios.get(`${this.BASE_ENDPOINT}/dashboards/revenue-period`))
+			.pipe(
+				map(response => response.data)
+			);
 	}
 
-	getCurrentYear(): Observable<number> {
-		return this.http.get<number>(`${BASE_ENDPOINT}/dashboards/current-year`);
+	getCurrentYear(): Observable<any> {
+		return from(axios.get(`${this.BASE_ENDPOINT}/dashboards/current-year`))
+			.pipe(
+				map(response => response.data)
+			);
 	}
 
 	getTopProductRevenue(): Observable<any> {
-		return this.http.get(`${BASE_ENDPOINT}/dashboards/top-product`)
+		return from(axios.get(`${this.BASE_ENDPOINT}/dashboards/top-product`))
+			.pipe(
+				map(response => response.data)
+			)
 	}
 
 	getRestaurantRevenue(): Observable<any> {
-		return this.http.get(`${BASE_ENDPOINT}/dashboards/restaurant-revenue`)
+		return from(axios.get(`${this.BASE_ENDPOINT}/dashboards/restaurant-revenue`))
+			.pipe(
+				map(response => response.data)
+			)
 	}
 
 	getOrdersByRestaurant(type: number, searchText?: string): Observable<any> {
-		return this.http.get(`${BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`)
+		return from(axios.get(`${this.BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`))
+			.pipe(
+				map(response => response.data)
+			)
 	}
 
 	exportOrders(): Observable<any> {
-		return this.http.get(`${BASE_ENDPOINT}/orders/export`);
+		return from(axios.get(`${this.BASE_ENDPOINT}/orders/export`))
+			.pipe(
+				map(response => response.data)
+			)
 	}
 
 	ngOnDestroy() {
@@ -286,8 +312,6 @@ export interface Restaurant {
 	value: number;
 	name: string;
 }
-
-const BASE_ENDPOINT: string = "https://localhost:7020/api";
 
 const CHART_CONTAINER = [
 	{ id: 'chartContainer1' },

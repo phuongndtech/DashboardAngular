@@ -26,6 +26,7 @@
     "@canvasjs/angular-charts": "^1.2.0",
     "@ng-bootstrap/ng-bootstrap": "^16.0.0",
     "@popperjs/core": "^2.11.8",
+    "axios": "^1.6.8",
     "bootstrap": "^5.3.3",
     "datatables.net": "^1.11.3",
     "datatables.net-dt": "^1.11.3",
