@@ -14,8 +14,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import {MatSort, Sort, MatSortModule} from '@angular/material/sort';
-import {LiveAnnouncer} from '@angular/cdk/a11y';
+import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
+import { LiveAnnouncer } from '@angular/cdk/a11y';
 
 @Component({
 	selector: 'app-root',
@@ -202,6 +202,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		);
 	}
 
+	export() {
+		this.exportOrders();
+	}
+
 	ngAfterViewInit(): void {
 		this.dataSource.paginator = this.paginator;
 		this.dataSource.sort = this.sort;
@@ -209,11 +213,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	announceSortChange(sortState: Sort) {
 		if (sortState.direction) {
-		  this._liveAnnouncer.announce(`Sorted ${sortState.direction}ending`);
+			this._liveAnnouncer.announce(`Sorted ${sortState.direction}ending`);
 		} else {
-		  this._liveAnnouncer.announce('Sorting cleared');
+			this._liveAnnouncer.announce('Sorting cleared');
 		}
-	  }
+	}
 
 	search() {
 		this.dataSource.data = [];
@@ -258,6 +262,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	getOrdersByRestaurant(type: number, searchText?: string): Observable<any> {
 		return this.http.get(`${BASE_ENDPOINT}/orders?type=${type}&searchText=${searchText}`)
+	}
+
+	exportOrders(): Observable<any> {
+		return this.http.get(`${BASE_ENDPOINT}/orders/export`);
 	}
 
 	ngOnDestroy() {
