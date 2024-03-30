@@ -27,6 +27,9 @@
             <li class="breadcrumb-item active">Reporting</li>
           </ol>
           <div class="row">
+            <div *ngIf="isLoadingChart" class="spinner-overlay">
+              <mat-spinner diameter="50"></mat-spinner>
+            </div>
             <div class="col-xl-3 col-md-6" *ngFor="let container of chartContainers">
               <div [id]="container.id" style="height: 370px; width: 100%;"></div>
             </div>

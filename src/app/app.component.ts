@@ -18,6 +18,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { environment } from '../environments/environment';
 
 @Component({
 	selector: 'app-root',
@@ -68,11 +69,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	isLoadingOrder: boolean = true;
 
+	isLoadingChart: boolean = true;
+
 	selected = 1;
 
 	formattedDate: string | null;
 
-	BASE_ENDPOINT: string = "https://localhost:7020/api";
+	BASE_ENDPOINT: string = environment.apiEndpoint;
 
 	isExporting: boolean = false;
 
@@ -83,11 +86,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	ngOnInit(): void {
 
-		this.getCurrentYear().subscribe(data => {
+		this.getCurrentYear().subscribe(
+			data => {
 			this.currentYear = data
-		})
+		});
 
 		this.getRevenueByPeriod().subscribe(data => {
+			this.isLoadingChart = true;
 			this.chartData = [];
 
 			for (let period in data) {
@@ -119,6 +124,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		})
 
 		this.getTopProductRevenue().subscribe(data => {
+			this.isLoadingChart = false
 			this.topProductChartData = [];
 
 			let transformedData = data.productRevenues.map((item: any) => {
@@ -149,6 +155,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		});
 
 		this.getRestaurantRevenue().subscribe(data => {
+			this.isLoadingChart = false
 			this.compareRevenueChartData = [];
 
 			for (let restType in data) {
