@@ -14,6 +14,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import {MatSort, Sort, MatSortModule} from '@angular/material/sort';
+import {LiveAnnouncer} from '@angular/cdk/a11y';
 
 @Component({
 	selector: 'app-root',
@@ -30,7 +32,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 		MatInputModule,
 		FormsModule,
 		HttpClientModule,
-		MatProgressSpinnerModule
+		MatProgressSpinnerModule,
+		MatSortModule
 	],
 	providers: [DatePipe],
 	templateUrl: './app.component.html',
@@ -57,6 +60,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	@ViewChild('productName', { read: ElementRef }) productName: ElementRef<HTMLElement>;
 
+	@ViewChild(MatSort) sort: MatSort;
+
 	productNameAutofilled: boolean;
 
 	isLoadingOrder: boolean = true;
@@ -65,7 +70,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	formattedDate: string | null;
 
-	constructor(private datePipe: DatePipe, private _autofill: AutofillMonitor, private http: HttpClient) { }
+	constructor(private datePipe: DatePipe, private _autofill: AutofillMonitor, private http: HttpClient, private _liveAnnouncer: LiveAnnouncer) { }
 
 	ngOnInit(): void {
 
@@ -199,7 +204,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	ngAfterViewInit(): void {
 		this.dataSource.paginator = this.paginator;
+		this.dataSource.sort = this.sort;
 	}
+
+	announceSortChange(sortState: Sort) {
+		if (sortState.direction) {
+		  this._liveAnnouncer.announce(`Sorted ${sortState.direction}ending`);
+		} else {
+		  this._liveAnnouncer.announce('Sorting cleared');
+		}
+	  }
 
 	search() {
 		this.dataSource.data = [];
@@ -274,4 +288,4 @@ const CHART_CONTAINER = [
 	{ id: 'chartContainer4' }
 ]
 
-const ORDER_COLUMN = ['Order Number', 'Order Date', 'Item Name', 'Quantity', 'Product Price', 'Total products'];
+const ORDER_COLUMN = ['orderNumber', 'orderDate', 'itemName', 'quantity', 'productPrice', 'totalProducts'];

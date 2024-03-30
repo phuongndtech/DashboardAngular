@@ -9,6 +9,7 @@ mat-form-field.product-name {
 .table-container {
   position: relative;
   min-height: 300px;
+  height: 400px;
   max-width: 100%;
   overflow: auto;
 }
@@ -19,4 +20,8 @@ mat-form-field.product-name {
   left: 50%;
   z-index: 9999;
   transform: translate(-50%, -50%);
+}
+
+th.mat-sort-header-sorted {
+  color: black;
 }
