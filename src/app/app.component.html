@@ -84,7 +84,11 @@
                       </form>
                     </div>
                     <div class="col-xl-4 d-flex justify-content-end">
-                      <button mat-raised-button style="top:20px" class="ml-auto" (click)="export()">Export</button>
+                      <button mat-raised-button style="top:20px" class="ml-auto" (click)="export()"
+                        [disabled]="isExporting">
+                        <span *ngIf="!isExporting">Export</span>
+                        <mat-spinner diameter="20" *ngIf="isExporting"></mat-spinner>
+                      </button>
                     </div>
                   </div>
                   <div class="table-container">

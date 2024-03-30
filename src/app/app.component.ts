@@ -17,6 +17,7 @@ import { map } from 'rxjs/operators';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSort, Sort, MatSortModule } from '@angular/material/sort';
 import { LiveAnnouncer } from '@angular/cdk/a11y';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
 	selector: 'app-root',
@@ -73,7 +74,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
 	BASE_ENDPOINT: string = "https://localhost:7020/api";
 
-	constructor(private datePipe: DatePipe, private _autofill: AutofillMonitor, private http: HttpClient, private _liveAnnouncer: LiveAnnouncer) { }
+	isExporting: boolean = false;
+
+	constructor(private datePipe: DatePipe, 
+		private _autofill: AutofillMonitor, 
+		private http: HttpClient, 
+		private _liveAnnouncer: LiveAnnouncer,
+		private _snackBar: MatSnackBar) { }
 
 	ngOnInit(): void {
 
@@ -206,14 +213,36 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 	}
 
 	export() {
-		this.exportOrders().subscribe(
-			(response: any) => {
-
-			}
+		this.isExporting = true;
+		this.exportOrders().subscribe(response => {
+			const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'restaurant_data.xlsx';
+			document.body.appendChild(a);
+			a.click();
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+			this.isExporting = false;
+			this.showNotification('Export Successful');
+		  },
+		  error => {
+			this.isExporting = false;
+			console.error('Export failed', error);
+			this.showNotification('Export Failed');
+		  }
 		);
 	}
 
-
+	showNotification(message: string) {
+		this._snackBar.open(message, 'Close', {
+			duration: 3000,
+			horizontalPosition: 'end',
+			verticalPosition: 'top'
+		});
+	}
+	
 	ngAfterViewInit(): void {
 		this.dataSource.paginator = this.paginator;
 		this.dataSource.sort = this.sort;
@@ -251,7 +280,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 		{ value: 1, name: 'Restaurant 1' },
 		{ value: 2, name: 'Restaurant 2' }
 	];
-	
+
 	getRevenueByPeriod(): Observable<any> {
 		return from(axios.get(`${this.BASE_ENDPOINT}/dashboards/revenue-period`))
 			.pipe(
